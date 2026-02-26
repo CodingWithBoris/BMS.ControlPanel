@@ -1,0 +1,70 @@
+<Window x:Class="BMS.ControlPanel.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="BMS Control Panel" Height="700" Width="900"
+    Background="{StaticResource PanelBrush}" Foreground="White"
+        WindowStartupLocation="CenterScreen">
+    <DockPanel Background="{StaticResource PanelBrush}">
+        <!-- Top Navigation Bar (visible after login + faction selection) -->
+    <Border x:Name="TopBar" DockPanel.Dock="Top" Background="#0A0A0A"
+        BorderBrush="#2A2A2A" BorderThickness="0,0,0,1"
+        Padding="10,8" Visibility="Collapsed">
+            <DockPanel>
+                <!-- Right-docked buttons -->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <Button x:Name="CreateFactionBtn" Content="Create Faction" Click="OnCreateFaction_Click"
+                        Style="{StaticResource CpSuccessButtonStyle}" Cursor="Hand" MinWidth="110" Margin="0,0,5,0"
+                        Visibility="Collapsed"/>
+                    <Button x:Name="SwitchFactionBtn" Content="Switch Faction" Click="OnSwitchFaction_Click"
+                        Style="{StaticResource CpDarkButtonStyle}" Cursor="Hand" MinWidth="110" Margin="0,0,5,0"/>
+                    <Button Content="Logout" Click="OnLogout_Click"
+                        Style="{StaticResource CpDangerButtonStyle}" Cursor="Hand" MinWidth="100"/>
+                </StackPanel>
+
+                <TextBlock x:Name="FactionLabel" Text="Faction: ---" 
+                           DockPanel.Dock="Left" VerticalAlignment="Center"
+               Foreground="{StaticResource GoldTextBrush}" FontSize="15" FontWeight="Bold" Margin="0,0,20,0"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button x:Name="OrdersTabBtn" Content="BMS Orders" Click="OnOrdersTab_Click"
+                Style="{StaticResource CpTabButtonStyle}" Margin="0,0,5,0"
+                FontWeight="Bold" Cursor="Hand"/>
+                    <Button x:Name="RolesTabBtn" Content="Roles" Click="OnRolesTab_Click"
+                Style="{StaticResource CpTabButtonStyle}" Margin="0,0,5,0"
+                FontWeight="Bold" Cursor="Hand" Visibility="Collapsed"/>
+                    <Button x:Name="PersonnelTabBtn" Content="Personnel" Click="OnPersonnelTab_Click"
+                Style="{StaticResource CpTabButtonStyle}" Margin="0,0,5,0"
+                FontWeight="Bold" Cursor="Hand" Visibility="Collapsed"/>
+                    <Button x:Name="SettingsTabBtn" Content="Settings" Click="OnSettingsTab_Click"
+                Style="{StaticResource CpTabButtonStyle}"
+                FontWeight="Bold" Cursor="Hand"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Faction Picker Popup -->
+        <Popup x:Name="FactionPickerPopup" StaysOpen="False" Placement="Bottom"
+               PlacementTarget="{Binding ElementName=SwitchFactionBtn}" AllowsTransparency="True">
+            <Border Background="#0A0A0A" BorderBrush="#2A2A2A" BorderThickness="1"
+                    CornerRadius="0" Padding="8" MinWidth="220">
+                <StackPanel>
+                    <TextBlock Text="Your Factions" Foreground="{StaticResource GoldTextBrush}"
+                               FontWeight="Bold" FontSize="13" Margin="4,2,4,8"/>
+                    <ListBox x:Name="FactionPickerList" Background="Transparent" BorderThickness="0"
+                             Foreground="White" SelectionChanged="OnFactionPickerSelected"
+                             MaxHeight="250">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Title}" Padding="6,4" FontSize="13"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock x:Name="NoFactionsText" Text="No factions available" 
+                               Foreground="#999" FontSize="12" Margin="4,4" Visibility="Collapsed"/>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- Main Content Frame -->
+    <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden" Background="Transparent"/>
+    </DockPanel>
+</Window>

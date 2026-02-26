@@ -1,0 +1,237 @@
+<Application x:Class="BMS.ControlPanel.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:BMS.ControlPanel"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <local:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+        <local:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+
+        <!-- Flat brushes — no gradients -->
+        <SolidColorBrush x:Key="GoldButtonBackground" Color="#0A0A0A"/>
+        <SolidColorBrush x:Key="GoldButtonBackgroundHover" Color="#141414"/>
+        <SolidColorBrush x:Key="DarkButtonBackground" Color="#0A0A0A"/>
+        <SolidColorBrush x:Key="DarkButtonBackgroundHover" Color="#141414"/>
+
+        <SolidColorBrush x:Key="GoldBorderBrush" Color="#6B4F00"/>
+        <SolidColorBrush x:Key="GoldBorderHoverBrush" Color="#D4880A"/>
+        <SolidColorBrush x:Key="GoldTextBrush" Color="#B8860B"/>
+        <SolidColorBrush x:Key="GoldTextHoverBrush" Color="#FFB300"/>
+        <SolidColorBrush x:Key="DarkBorderBrush" Color="#2A2A2A"/>
+        <SolidColorBrush x:Key="DarkTextBrush" Color="#A0A0A0"/>
+        <SolidColorBrush x:Key="DangerBrush" Color="#FF6060"/>
+        <SolidColorBrush x:Key="SuccessBrush" Color="#60FF60"/>
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#0A0A0A"/>
+        <SolidColorBrush x:Key="PanelBrush" Color="#0A0A0A"/>
+
+        <!-- Dotted texture — matches BMS Overlay -->
+        <DrawingBrush x:Key="OverlayDottedTexture" TileMode="Tile"
+                      Viewport="0,0,6,6" ViewportUnits="Absolute"
+                      Viewbox="0,0,6,6" ViewboxUnits="Absolute">
+            <DrawingBrush.Drawing>
+                <GeometryDrawing Brush="#1C1C1C">
+                    <GeometryDrawing.Geometry>
+                        <EllipseGeometry Center="3,3" RadiusX="0.6" RadiusY="0.6"/>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
+        <!-- Card border — sharp corners, dark surface -->
+        <Style x:Key="CpCardBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="#0A0A0A"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="0"/>
+            <Setter Property="Padding" Value="12"/>
+        </Style>
+
+        <!-- Gold primary button -->
+        <Style x:Key="CpGoldButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource GoldTextBrush}"/>
+            <Setter Property="Background" Value="{StaticResource GoldButtonBackground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource GoldBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="0"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Rectangle Fill="{StaticResource OverlayDottedTexture}" Opacity="0.35" IsHitTestVisible="False"/>
+                                <ContentPresenter HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  RecognizesAccessKey="True"
+                                                  Margin="{TemplateBinding Padding}"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource GoldButtonBackgroundHover}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource GoldBorderHoverBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource GoldTextHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.92"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Dark secondary button -->
+        <Style x:Key="CpDarkButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource DarkTextBrush}"/>
+            <Setter Property="Background" Value="{StaticResource DarkButtonBackground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource DarkBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="0"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Rectangle Fill="{StaticResource OverlayDottedTexture}" Opacity="0.35" IsHitTestVisible="False"/>
+                                <ContentPresenter HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  RecognizesAccessKey="True"
+                                                  Margin="{TemplateBinding Padding}"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource DarkButtonBackgroundHover}"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#CCCCCC"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.92"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Danger button — red foreground, dark border -->
+        <Style x:Key="CpDangerButtonStyle" TargetType="Button" BasedOn="{StaticResource CpDarkButtonStyle}">
+            <Setter Property="Foreground" Value="#FF6060"/>
+            <Setter Property="BorderBrush" Value="#4A1A1A"/>
+        </Style>
+
+        <!-- Success button — inherits gold -->
+        <Style x:Key="CpSuccessButtonStyle" TargetType="Button" BasedOn="{StaticResource CpGoldButtonStyle}"/>
+
+        <!-- Tab button — dark base, gold when active (IsEnabled=False) -->
+        <Style x:Key="CpTabButtonStyle" TargetType="Button" BasedOn="{StaticResource CpDarkButtonStyle}">
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="MinWidth" Value="120"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="{StaticResource GoldTextBrush}"/>
+                    <Setter Property="Background" Value="{StaticResource GoldButtonBackground}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource GoldBorderBrush}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Opacity" Value="1"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Text input -->
+        <Style x:Key="CpInputTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#0A0A0A"/>
+            <Setter Property="Foreground" Value="#D8D8D8"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Height" Value="34"/>
+        </Style>
+
+        <!-- Password input -->
+        <Style x:Key="CpInputPasswordBoxStyle" TargetType="PasswordBox">
+            <Setter Property="Background" Value="#0A0A0A"/>
+            <Setter Property="Foreground" Value="#D8D8D8"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Height" Value="34"/>
+        </Style>
+
+        <!-- ComboBox -->
+        <Style x:Key="CpComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="#0A0A0A"/>
+            <Setter Property="Foreground" Value="#D8D8D8"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Height" Value="34"/>
+        </Style>
+
+        <!-- DataGrid -->
+        <Style x:Key="CpDataGridStyle" TargetType="DataGrid">
+            <Setter Property="Background" Value="#0A0A0A"/>
+            <Setter Property="Foreground" Value="#D8D8D8"/>
+            <Setter Property="RowBackground" Value="#0A0A0A"/>
+            <Setter Property="AlternatingRowBackground" Value="#141414"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#2A2A2A"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+        </Style>
+
+        <Style x:Key="CpDataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#0D0D0D"/>
+            <Setter Property="Foreground" Value="#B8860B"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        </Style>
+
+        <Style x:Key="CpDataGridCellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#D8D8D8"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#3D2E00"/>
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,39 @@
+<Page x:Class="BMS.ControlPanel.Views.LoginView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="Login" Background="Transparent" Foreground="White">
+    <Grid Background="{StaticResource PanelBrush}">
+        <Border Style="{StaticResource CpCardBorderStyle}" Width="360"
+                VerticalAlignment="Center" HorizontalAlignment="Center" Margin="24">
+            <StackPanel>
+                <TextBlock Text="BMS Control Panel" FontSize="22"
+                           FontWeight="Bold" Margin="0,0,0,20" Foreground="{StaticResource GoldTextBrush}"/>
+
+                <TextBlock Text="Username" Foreground="White" Margin="0,0,0,5"/>
+                <TextBox x:Name="UsernameBox" Margin="0,0,0,8"
+                         Style="{StaticResource CpInputTextBoxStyle}"
+                         Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Text="Password" Foreground="White" Margin="0,0,0,5"/>
+                <PasswordBox x:Name="PasswordBox" Margin="0,0,0,16"
+                             Style="{StaticResource CpInputPasswordBoxStyle}"/>
+
+                <Button Content="Login" Click="OnLogin_Click" Margin="0,0,0,8"
+                        Style="{StaticResource CpGoldButtonStyle}"
+                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}"/>
+                <Button Content="Login with Discord"
+                        Click="OnDiscordLogin_Click" Margin="0,0,0,16"
+                        Style="{StaticResource CpDarkButtonStyle}"
+                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}"/>
+
+                <TextBlock Text="{Binding StatusMessage}" Foreground="White"
+                           TextWrapping="Wrap" Margin="0,0,0,12" MinHeight="30"
+                           Visibility="{Binding StatusMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+
+                <Button Content="Create Account" Click="OnCreateAccount_Click" Margin="0,12,0,0"
+                        Style="{StaticResource CpDarkButtonStyle}"
+                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>
