@@ -14,6 +14,8 @@
 
             <!-- Faction List -->
             <TextBlock Text="Join Existing Faction" Foreground="White" Margin="0,0,0,8" FontWeight="Bold"/>
+            <TextBox x:Name="FactionSearchBox" Style="{StaticResource CpInputTextBoxStyle}"
+                     Margin="0,0,0,6" TextChanged="OnFactionSearch_TextChanged"/>
             <ListBox x:Name="FactionsListBox" Height="120" Margin="0,0,0,10"
                      Background="#0A0A0A" Foreground="#D8D8D8" BorderBrush="#2A2A2A" BorderThickness="1"
                      DisplayMemberPath="Title"

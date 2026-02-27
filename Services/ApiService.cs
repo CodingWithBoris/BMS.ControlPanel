@@ -340,6 +340,20 @@ public class ApiService
         }
     }
 
+    public async Task<bool> DeleteFactionAsync(string factionId)
+    {
+        try
+        {
+            var response = await _httpClient.DeleteAsync($"factions/{factionId}");
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Delete Faction Error: {ex.Message}");
+            return false;
+        }
+    }
+
     // ──────────────────────────────────────────
     // BMS Orders Endpoints
     // ──────────────────────────────────────────

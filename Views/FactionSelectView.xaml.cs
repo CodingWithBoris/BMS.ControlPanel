@@ -8,6 +8,7 @@ namespace BMS.ControlPanel.Views;
 public partial class FactionSelectView : Page
 {
     private readonly FactionSelectViewModel _viewModel;
+    private List<Faction> _allFactions = new();
 
     public FactionSelectView(FactionSelectViewModel viewModel)
     {
@@ -18,7 +19,8 @@ public partial class FactionSelectView : Page
         {
             Dispatcher.Invoke(() =>
             {
-                FactionsListBox.ItemsSource = _viewModel.Factions;
+                _allFactions = _viewModel.Factions;
+                FactionsListBox.ItemsSource = _allFactions;
             });
         });
     }
@@ -50,5 +52,13 @@ public partial class FactionSelectView : Page
     private void OnCancelCreate_Click(object sender, System.Windows.RoutedEventArgs e)
     {
         _viewModel.CancelCreateDialog();
+    }
+
+    private void OnFactionSearch_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        var query = FactionSearchBox.Text.Trim();
+        FactionsListBox.ItemsSource = string.IsNullOrEmpty(query)
+            ? _allFactions
+            : _allFactions.Where(f => f.Title.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
     }
 }

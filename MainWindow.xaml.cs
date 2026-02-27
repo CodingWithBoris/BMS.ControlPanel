@@ -14,10 +14,12 @@ public partial class MainWindow : Window
     private User? _currentUser;
     private Faction? _currentFaction;
     private List<Faction> _userFactions = new();
+    private List<FactionPickerItem> _allFactionPickerItems = new();
 
     public MainWindow()
     {
         InitializeComponent();
+        Icon = new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://application:,,,/app.ico"));
         _apiService = new ApiService();
         _authService = new AuthService();
         _ = InitializeAsync();
@@ -104,8 +106,9 @@ public partial class MainWindow : Window
 
         if (_userFactions.Count > 0)
         {
-            // User has a faction — go to dashboard with first faction
-            _currentFaction = _userFactions[0];
+            // Prefer the faction the user owns, otherwise fall back to first
+            var ownedFaction = _userFactions.FirstOrDefault(f => f.OwnerId == _currentUser?.Id);
+            _currentFaction = ownedFaction ?? _userFactions[0];
             NavigateToDashboard();
         }
         else
@@ -115,10 +118,11 @@ public partial class MainWindow : Window
         }
     }
 
-    private void NavigateToFactionSelect()
+    private void NavigateToFactionSelect(bool openCreateDialog = false)
     {
         TopBar.Visibility = Visibility.Collapsed;
         var factionSelectViewModel = new FactionSelectViewModel(_apiService);
+        if (openCreateDialog) factionSelectViewModel.ShowCreateDialog();
         factionSelectViewModel.FactionJoined += async (s, faction) =>
         {
             _currentFaction = faction;
@@ -146,6 +150,7 @@ public partial class MainWindow : Window
         bool isOwner = _currentUser?.Id == _currentFaction.OwnerId;
         RolesTabBtn.Visibility = isOwner ? Visibility.Visible : Visibility.Collapsed;
         PersonnelTabBtn.Visibility = isOwner ? Visibility.Visible : Visibility.Collapsed;
+        DeleteFactionBtn.Visibility = isOwner ? Visibility.Visible : Visibility.Collapsed;
 
         // Show Create Faction button only if user hasn't created one yet
         bool hasCreatedFaction = !string.IsNullOrEmpty(_currentUser?.CreatedFactionId);
@@ -222,9 +227,10 @@ public partial class MainWindow : Window
     private void OnPersonnelTab_Click(object sender, RoutedEventArgs e) => ShowPersonnelTab();
     private void OnSettingsTab_Click(object sender, RoutedEventArgs e) => ShowSettingsTab();
 
+    private record FactionPickerItem(Faction Faction, string DisplayTitle);
+
     private async void OnSwitchFaction_Click(object sender, RoutedEventArgs e)
     {
-        // Refresh the user's factions list
         _userFactions = await _apiService.GetUserFactionsAsync();
 
         if (_userFactions.Count == 0)
@@ -235,27 +241,71 @@ public partial class MainWindow : Window
         else
         {
             NoFactionsText.Visibility = Visibility.Collapsed;
-            FactionPickerList.ItemsSource = _userFactions;
+            _allFactionPickerItems = _userFactions
+                .Select(f => new FactionPickerItem(f,
+                    f.OwnerId == _currentUser?.Id ? $"{f.Title} (Owner)" : f.Title))
+                .ToList();
+            FactionPickerList.ItemsSource = _allFactionPickerItems;
         }
 
+        FactionPickerSearch.Text = string.Empty;
         FactionPickerList.SelectedItem = null;
         FactionPickerPopup.IsOpen = true;
     }
 
     private void OnFactionPickerSelected(object sender, SelectionChangedEventArgs e)
     {
-        if (FactionPickerList.SelectedItem is Faction selectedFaction)
+        if (FactionPickerList.SelectedItem is FactionPickerItem item)
         {
             FactionPickerPopup.IsOpen = false;
-            _currentFaction = selectedFaction;
+            _currentFaction = item.Faction;
             NavigateToDashboard();
         }
     }
 
-    private void OnCreateFaction_Click(object sender, RoutedEventArgs e)
+    private void OnFactionPickerSearch_TextChanged(object sender, TextChangedEventArgs e)
     {
-        // Navigate to faction select view (which has the create dialog)
-        NavigateToFactionSelect();
+        var query = FactionPickerSearch.Text.Trim();
+        FactionPickerList.ItemsSource = string.IsNullOrEmpty(query)
+            ? _allFactionPickerItems
+            : _allFactionPickerItems
+                .Where(i => i.DisplayTitle.Contains(query, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+    }
+
+    private void OnCreateFaction_Click(object sender, RoutedEventArgs e)
+        => NavigateToFactionSelect(openCreateDialog: true);
+
+    private async void OnDeleteFaction_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentFaction == null) return;
+
+        var confirm = MessageBox.Show(
+            $"Permanently delete '{_currentFaction.Title}'?\nThis will remove all members, roles, orders, and notepads.",
+            "Delete Faction", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (confirm != MessageBoxResult.Yes) return;
+
+        if (!await _apiService.DeleteFactionAsync(_currentFaction.Id))
+        {
+            MessageBox.Show("Failed to delete faction. Please try again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        _currentFaction = null;
+        _userFactions = await _apiService.GetUserFactionsAsync();
+        var freshUser = await _apiService.GetCurrentUserAsync();
+        if (freshUser != null) _currentUser = freshUser;
+
+        if (_userFactions.Count > 0)
+        {
+            var ownedFaction = _userFactions.FirstOrDefault(f => f.OwnerId == _currentUser?.Id);
+            _currentFaction = ownedFaction ?? _userFactions[0];
+            NavigateToDashboard();
+        }
+        else
+        {
+            NavigateToFactionSelect();
+        }
     }
 
     private void OnLogout_Click(object sender, RoutedEventArgs e)

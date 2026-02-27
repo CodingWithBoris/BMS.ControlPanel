@@ -115,6 +115,15 @@ public class FactionSelectViewModel : INotifyPropertyChanged
             var faction = await _apiService.GetFactionAsync(SelectedFaction.Id);
             FactionJoined?.Invoke(this, faction ?? SelectedFaction);
         }
+        else if (message.Contains("already a member", StringComparison.OrdinalIgnoreCase))
+        {
+            StatusMessage = "Already a member — switching to faction...";
+            var faction = await _apiService.GetFactionAsync(SelectedFaction.Id);
+            if (faction != null)
+                FactionJoined?.Invoke(this, faction);
+            else
+                StatusMessage = "Failed to load faction. Please try again.";
+        }
         else
         {
             StatusMessage = message;
