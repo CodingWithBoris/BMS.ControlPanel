@@ -20,10 +20,12 @@ public class UserSettingsViewModel : INotifyPropertyChanged
     public User CurrentUser
     {
         get => _currentUser;
-        set { _currentUser = value; OnPropertyChanged(); OnPropertyChanged(nameof(Username)); OnPropertyChanged(nameof(HasCreatedFaction)); }
+        set { _currentUser = value; OnPropertyChanged(); OnPropertyChanged(nameof(Username)); OnPropertyChanged(nameof(HasCreatedFaction)); OnPropertyChanged(nameof(CurrentUserId)); }
     }
 
     public string Username => _currentUser?.DisplayName ?? "Unknown";
+
+    public string CurrentUserId => _currentUser?.Id ?? string.Empty;
 
     public bool HasCreatedFaction => !string.IsNullOrEmpty(_currentUser?.CreatedFactionId);
 
@@ -77,6 +79,34 @@ public class UserSettingsViewModel : INotifyPropertyChanged
     public void GoToJoinOrCreate()
     {
         NavigateToFactionSelect?.Invoke(this, EventArgs.Empty);
+    }
+
+    public async Task SaveDiscordServerIdAsync(Faction faction)
+    {
+        if (faction.OwnerId != CurrentUserId)
+        {
+            StatusMessage = "Only the faction owner can set the Discord server ID.";
+            return;
+        }
+
+        IsLoading = true;
+        StatusMessage = $"Saving Discord server ID for '{faction.Title}'...";
+
+        var updated = await _apiService.UpdateFactionAsync(faction.Id, discordServerId: faction.DiscordServerId);
+        if (updated == null)
+        {
+            StatusMessage = "Failed to save Discord server ID.";
+            IsLoading = false;
+            return;
+        }
+
+        var idx = UserFactions.FindIndex(f => f.Id == faction.Id);
+        if (idx >= 0)
+            UserFactions[idx] = updated;
+
+        OnPropertyChanged(nameof(UserFactions));
+        StatusMessage = $"Discord server ID saved for '{updated.Title}'.";
+        IsLoading = false;
     }
 
     protected void OnPropertyChanged([CallerMemberName] string name = "")

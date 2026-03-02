@@ -5,6 +5,10 @@ public class Faction
     public string Id { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string OwnerId { get; set; } = string.Empty;
+    public string? DiscordServerId { get; set; }
+    public bool IsBotInDiscordServer { get; set; }
+    public DateTime? BotInviteRequestedAt { get; set; }
+    public string? BotInviteMessage { get; set; }
     public List<Role> Roles { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

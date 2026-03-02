@@ -15,12 +15,14 @@ public class OrdersEditorViewModel : INotifyPropertyChanged
     private ObservableCollection<BmsOrder> _orders = new();
     private ObservableCollection<Role> _roles = new();
     private ObservableCollection<EditableSection> _sections = new();
+    private ObservableCollection<EditableObjective> _objectives = new();
     private int _currentIndex = -1;
     private string _statusMessage = string.Empty;
     private bool _isLoading = false;
     private bool _isPublished = false;
     private string _orderLabel = "No Orders";
     private Role? _selectedRole;
+    private string _mapImageUrl = string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -55,6 +57,12 @@ public class OrdersEditorViewModel : INotifyPropertyChanged
     {
         get => _sections;
         set { _sections = value; OnPropertyChanged(); }
+    }
+
+    public ObservableCollection<EditableObjective> Objectives
+    {
+        get => _objectives;
+        set { _objectives = value; OnPropertyChanged(); }
     }
 
     public int CurrentIndex
@@ -104,6 +112,12 @@ public class OrdersEditorViewModel : INotifyPropertyChanged
         set { _orderLabel = value; OnPropertyChanged(); }
     }
 
+    public string MapImageUrl
+    {
+        get => _mapImageUrl;
+        set { _mapImageUrl = value; OnPropertyChanged(); }
+    }
+
     public OrdersEditorViewModel(ApiService apiService, Faction faction)
     {
         _apiService = apiService;
@@ -120,6 +134,15 @@ public class OrdersEditorViewModel : INotifyPropertyChanged
             foreach (var section in CurrentOrder.Sections.OrderBy(s => s.Index))
                 Sections.Add(EditableSection.FromOrderSection(section));
         }
+
+        Objectives.Clear();
+        if (CurrentOrder?.Objectives != null)
+        {
+            foreach (var obj in CurrentOrder.Objectives.OrderBy(o => o.Index))
+                Objectives.Add(EditableObjective.FromMissionObjective(obj));
+        }
+
+        MapImageUrl = CurrentOrder?.MapImageUrl ?? string.Empty;
     }
 
     public EditableSection AddSection(string type)
@@ -130,6 +153,11 @@ public class OrdersEditorViewModel : INotifyPropertyChanged
             Index = Sections.Count,
             Title = $"Section {Sections.Count + 1}",
         };
+
+        if (type == "vcroster")
+        {
+            section.Title = "VC Roster";
+        }
 
         if (type == "poll")
         {
@@ -181,6 +209,64 @@ public class OrdersEditorViewModel : INotifyPropertyChanged
     {
         ReindexSections();
         return Sections.Select(s => s.ToOrderSection()).ToList();
+    }
+
+    // ── Objective management ─────────────────────────────
+
+    public EditableObjective AddObjective()
+    {
+        var obj = new EditableObjective
+        {
+            Index = Objectives.Count,
+            Text = string.Empty,
+        };
+        Objectives.Add(obj);
+        return obj;
+    }
+
+    public void RemoveObjective(EditableObjective objective)
+    {
+        Objectives.Remove(objective);
+        ReindexObjectives();
+    }
+
+    public void MoveObjectiveUp(EditableObjective objective)
+    {
+        var idx = Objectives.IndexOf(objective);
+        if (idx > 0)
+        {
+            Objectives.Move(idx, idx - 1);
+            ReindexObjectives();
+        }
+    }
+
+    public void MoveObjectiveDown(EditableObjective objective)
+    {
+        var idx = Objectives.IndexOf(objective);
+        if (idx < Objectives.Count - 1)
+        {
+            Objectives.Move(idx, idx + 1);
+            ReindexObjectives();
+        }
+    }
+
+    private void ReindexObjectives()
+    {
+        for (int i = 0; i < Objectives.Count; i++)
+            Objectives[i].Index = i;
+    }
+
+    public List<MissionObjective> CollectObjectives()
+    {
+        ReindexObjectives();
+        return Objectives.Select(o => o.ToMissionObjective()).ToList();
+    }
+
+    public async Task SaveObjectivesAsync()
+    {
+        if (CurrentOrder == null) return;
+        var objectives = CollectObjectives();
+        await _apiService.ReplaceObjectivesAsync(_faction.Id, CurrentOrder.Id, objectives);
     }
 
     // ── Orders ──────────────────────────────────────────
@@ -281,6 +367,7 @@ public class OrdersEditorViewModel : INotifyPropertyChanged
             content: content,
             isPublished: false,
             roleId: SelectedRole?.Id,
+            mapImageUrl: MapImageUrl,
             sections: sections);
 
         if (result != null)
@@ -289,7 +376,9 @@ public class OrdersEditorViewModel : INotifyPropertyChanged
             CurrentOrder.Content = result.Content;
             CurrentOrder.Sections = result.Sections;
             CurrentOrder.IsPublished = result.IsPublished;
+            CurrentOrder.MapImageUrl = result.MapImageUrl;
             CurrentOrder.UpdatedAt = result.UpdatedAt;
+            await SaveObjectivesAsync();
             IsPublished = false;
             StatusMessage = "Draft saved successfully!";
         }
@@ -319,6 +408,7 @@ public class OrdersEditorViewModel : INotifyPropertyChanged
             title: title,
             content: content,
             roleId: SelectedRole?.Id,
+            mapImageUrl: MapImageUrl,
             sections: sections);
 
         if (updated == null)
@@ -336,6 +426,7 @@ public class OrdersEditorViewModel : INotifyPropertyChanged
             CurrentOrder.Sections = result.Sections;
             CurrentOrder.IsPublished = true;
             CurrentOrder.UpdatedAt = result.UpdatedAt;
+            await SaveObjectivesAsync();
             IsPublished = true;
             StatusMessage = "Order published successfully!";
         }

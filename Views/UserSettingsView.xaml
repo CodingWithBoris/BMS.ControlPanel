@@ -69,6 +69,26 @@
                                                     <TextBlock Text="{Binding Roles.Count, StringFormat='{}{0} role(s)'}"
                                                                Foreground="#6A6A6A" FontSize="11"/>
                                                 </StackPanel>
+                                                <StackPanel Margin="0,8,0,0">
+                                                    <TextBlock Text="Discord Server ID" Foreground="#9A9A9A" FontSize="11"/>
+                                                    <DockPanel Margin="0,4,0,0">
+                                                        <Button Content="Save"
+                                                                DockPanel.Dock="Right"
+                                                                Style="{StaticResource CpDarkButtonStyle}"
+                                                                Cursor="Hand"
+                                                                MinWidth="60"
+                                                                Margin="8,0,0,0"
+                                                                Click="OnSaveDiscordServerId_Click"
+                                                                Tag="{Binding}"/>
+                                                        <TextBox Text="{Binding DiscordServerId, UpdateSourceTrigger=PropertyChanged}"
+                                                                 Style="{StaticResource CpInputTextBoxStyle}"/>
+                                                    </DockPanel>
+                                                    <TextBlock Margin="0,4,0,0" FontSize="11" Foreground="#6A6A6A"
+                                                               Text="{Binding IsBotInDiscordServer, StringFormat='Bot in server: {0}'}"/>
+                                                    <TextBlock FontSize="11" Foreground="#B8860B"
+                                                               Text="{Binding BotInviteMessage}"
+                                                               Visibility="{Binding BotInviteMessage, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                                </StackPanel>
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>

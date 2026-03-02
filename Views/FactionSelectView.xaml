@@ -60,6 +60,11 @@
                            Foreground="White" Margin="0,0,0,5" FontSize="12"/>
                                 <PasswordBox x:Name="CreateViewPwBox" Style="{StaticResource CpInputPasswordBoxStyle}" Margin="0,0,0,10"/>
 
+                         <TextBlock Text="Discord Server ID (optional for VC tracking)"
+                                          Foreground="White" Margin="0,0,0,5" FontSize="12"/>
+                                                  <TextBox x:Name="CreateDiscordServerIdBox" Style="{StaticResource CpInputTextBoxStyle}" Margin="0,0,0,10"
+                                        Text="{Binding DiscordServerId, UpdateSourceTrigger=PropertyChanged}"/>
+
                 <TextBlock Text="Default Role Name" Foreground="White" Margin="0,0,0,5" FontSize="12"/>
                                 <TextBox x:Name="DefaultRoleBox" Style="{StaticResource CpInputTextBoxStyle}" Margin="0,0,0,20"
                          Text="{Binding DefaultRoleName, UpdateSourceTrigger=PropertyChanged}"/>

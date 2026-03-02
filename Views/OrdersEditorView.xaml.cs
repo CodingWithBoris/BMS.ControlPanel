@@ -59,6 +59,7 @@ public partial class OrdersEditorView : Page
         {
             TitleBox.Text = _viewModel.CurrentOrder.Title ?? string.Empty;
             RebuildSectionsUI();
+            RebuildObjectivesUI();
             UpdatePublishStatusLabel();
         }
         else
@@ -67,6 +68,7 @@ public partial class OrdersEditorView : Page
             SectionsPanel.Children.Clear();
             _sectionCards.Clear();
             _activeRichTextBox = null;
+            ObjectivesPanel.Children.Clear();
             PublishStatusLabel.Text = "";
         }
     }
@@ -144,6 +146,7 @@ public partial class OrdersEditorView : Page
             ["video"]     = Color.FromRgb(0x50, 0x18, 0x18),
             ["poll"]      = Color.FromRgb(0x3A, 0x28, 0x00),
             ["checklist"] = Color.FromRgb(0x0A, 0x2A, 0x0A),
+            ["vcroster"]  = Color.FromRgb(0x2A, 0x20, 0x08),
         };
         var typeColor = typeColors.GetValueOrDefault(section.Type, Color.FromRgb(0x29, 0x80, 0xB9));
         var typeBadge = new Border
@@ -197,6 +200,9 @@ public partial class OrdersEditorView : Page
                 break;
             case "checklist":
                 BuildChecklistSectionBody(card, stack, section);
+                break;
+            case "vcroster":
+                BuildVcRosterSectionBody(stack);
                 break;
         }
 
@@ -386,6 +392,29 @@ public partial class OrdersEditorView : Page
         parent.Children.Add(addBtn);
     }
 
+    private void BuildVcRosterSectionBody(StackPanel parent)
+    {
+        var hint = new TextBlock
+        {
+            Text = "This section will render live VC roster in the Overlay at this position.",
+            Foreground = new SolidColorBrush(Color.FromRgb(0xA0, 0xA0, 0xA0)),
+            FontSize = 11,
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 2, 0, 0),
+        };
+
+        var note = new Border
+        {
+            BorderBrush = new SolidColorBrush(Color.FromRgb(0x2A, 0x2A, 0x2A)),
+            BorderThickness = new Thickness(1),
+            Background = new SolidColorBrush(Color.FromRgb(0x0A, 0x0A, 0x0A)),
+            Padding = new Thickness(8),
+            Child = hint,
+        };
+
+        parent.Children.Add(note);
+    }
+
     private void AddChecklistItemRow(StackPanel panel, EditableSection section, string text)
     {
         var row = new DockPanel { Margin = new Thickness(0, 0, 0, 4) };
@@ -551,6 +580,7 @@ public partial class OrdersEditorView : Page
     private void OnAddVideoSection_Click(object sender, RoutedEventArgs e) => AddSectionAndRebuild("video");
     private void OnAddPollSection_Click(object sender, RoutedEventArgs e) => AddSectionAndRebuild("poll");
     private void OnAddChecklistSection_Click(object sender, RoutedEventArgs e) => AddSectionAndRebuild("checklist");
+    private void OnAddVcRosterSection_Click(object sender, RoutedEventArgs e) => AddSectionAndRebuild("vcroster");
 
     private void AddSectionAndRebuild(string type)
     {
@@ -679,6 +709,60 @@ public partial class OrdersEditorView : Page
         double currentSize = cur is double d ? d : 14;
         sel.ApplyPropertyValue(TextElement.FontSizeProperty, Math.Max(8, Math.Min(48, currentSize + delta)));
         _activeRichTextBox.Focus();
+    }
+
+    // ──── Objectives ──────────────────────────────────────────────
+
+    private void RebuildObjectivesUI()
+    {
+        ObjectivesPanel.Children.Clear();
+        foreach (var obj in _viewModel.Objectives)
+            AddObjectiveRow(obj);
+    }
+
+    private void AddObjectiveRow(EditableObjective obj)
+    {
+        var grid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(56) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(30) });
+
+        var moveBtns = new StackPanel { Orientation = Orientation.Horizontal };
+        var upBtn = new Button { Content = "▲", Width = 24, Height = 26, Margin = new Thickness(0, 0, 4, 0) };
+        var downBtn = new Button { Content = "▼", Width = 24, Height = 26 };
+        if (FindResource("CpDarkButtonStyle") is Style darkStyle)
+        {
+            upBtn.Style = darkStyle;
+            downBtn.Style = darkStyle;
+        }
+        upBtn.Click += (_, _) => { _viewModel.MoveObjectiveUp(obj); RebuildObjectivesUI(); };
+        downBtn.Click += (_, _) => { _viewModel.MoveObjectiveDown(obj); RebuildObjectivesUI(); };
+        moveBtns.Children.Add(upBtn);
+        moveBtns.Children.Add(downBtn);
+        Grid.SetColumn(moveBtns, 0);
+
+        var textBox = new TextBox { Text = obj.Text, Margin = new Thickness(4, 0, 4, 0), Height = 26 };
+        if (FindResource("CpInputTextBoxStyle") is Style inputStyle)
+            textBox.Style = inputStyle;
+        textBox.TextChanged += (_, _) => obj.Text = textBox.Text;
+        Grid.SetColumn(textBox, 1);
+
+        var delBtn = new Button { Content = "✕", Width = 26, Height = 26 };
+        if (FindResource("CpDangerButtonStyle") is Style dangerStyle)
+            delBtn.Style = dangerStyle;
+        delBtn.Click += (_, _) => { _viewModel.RemoveObjective(obj); RebuildObjectivesUI(); };
+        Grid.SetColumn(delBtn, 2);
+
+        grid.Children.Add(moveBtns);
+        grid.Children.Add(textBox);
+        grid.Children.Add(delBtn);
+        ObjectivesPanel.Children.Add(grid);
+    }
+
+    private void OnAddObjective_Click(object sender, RoutedEventArgs e)
+    {
+        var obj = _viewModel.AddObjective();
+        AddObjectiveRow(obj);
     }
 
     // ──── Save / Publish ──────────────────────────────────────────

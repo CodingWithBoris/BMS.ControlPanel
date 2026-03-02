@@ -262,11 +262,18 @@ public class ApiService
         }
     }
 
-    public async Task<Faction?> CreateFactionAsync(string title, string officerPassword, string viewPassword, List<CreateRoleModel>? roles = null)
+    public async Task<Faction?> CreateFactionAsync(string title, string officerPassword, string viewPassword, List<CreateRoleModel>? roles = null, string? discordServerId = null)
     {
         try
         {
-            var request = new { title, officerPassword, viewPassword, roles = roles ?? new List<CreateRoleModel>() };
+            var request = new
+            {
+                title,
+                officerPassword,
+                viewPassword,
+                discordServerId = string.IsNullOrWhiteSpace(discordServerId) ? null : discordServerId.Trim(),
+                roles = roles ?? new List<CreateRoleModel>()
+            };
             var json = JsonSerializer.Serialize(request);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync("factions", content);
@@ -354,6 +361,28 @@ public class ApiService
         }
     }
 
+    public async Task<Faction?> UpdateFactionAsync(string factionId, string? title = null, string? discordServerId = null)
+    {
+        try
+        {
+            var request = new
+            {
+                title,
+                discordServerId = discordServerId?.Trim()
+            };
+
+            var json = JsonSerializer.Serialize(request);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync($"factions/{factionId}", content);
+            return await ParseApiResponse<Faction>(response);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Update Faction Error: {ex.Message}");
+            return null;
+        }
+    }
+
     // ──────────────────────────────────────────
     // BMS Orders Endpoints
     // ──────────────────────────────────────────
@@ -410,11 +439,11 @@ public class ApiService
         }
     }
 
-    public async Task<BmsOrder?> UpdateOrderAsync(string factionId, string orderId, string? title = null, string? content = null, bool? isPublished = null, int? orderIndex = null, string? roleId = null, List<OrderSection>? sections = null)
+    public async Task<BmsOrder?> UpdateOrderAsync(string factionId, string orderId, string? title = null, string? content = null, bool? isPublished = null, int? orderIndex = null, string? roleId = null, string? mapImageUrl = null, List<OrderSection>? sections = null)
     {
         try
         {
-            var request = new { title, content, isPublished, orderIndex, roleId, sections };
+            var request = new { title, content, isPublished, orderIndex, roleId, mapImageUrl, sections };
             var json = JsonSerializer.Serialize(request);
             var body = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
             var response = await _httpClient.PutAsync($"factions/{factionId}/orders/{orderId}", body);
@@ -597,6 +626,48 @@ public class ApiService
     }
 
     // ──────────────────────────────────────────
+    // VC Roster
+    // ──────────────────────────────────────────
+    public async Task<List<VcRosterModel>> GetVcRosterAsync(string factionId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"factions/{factionId}/vc-roster");
+            if (!response.IsSuccessStatusCode) return new List<VcRosterModel>();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var apiResponse = JsonSerializer.Deserialize<Shared.Models.ApiResponse<List<VcRosterModel>>>(json, _jsonOptions);
+            return apiResponse?.Success == true && apiResponse.Data != null ? apiResponse.Data : new List<VcRosterModel>();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Get VC Roster Error: {ex.Message}");
+            return new List<VcRosterModel>();
+        }
+    }
+
+    public async Task<bool> UpdateVcMemberAsync(string factionId, string discordUserId,
+        string? team = null, string? callsign = null, string? role = null, bool? isHidden = null)
+    {
+        try
+        {
+            var request = new { team, callsign, role, isHidden };
+            var content = new StringContent(
+                JsonSerializer.Serialize(request),
+                System.Text.Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.PatchAsync($"factions/{factionId}/vc-roster/{discordUserId}", content);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Update VC Member Error: {ex.Message}");
+            return false;
+        }
+    }
+
+    // ──────────────────────────────────────────
     // Helper Methods
     // ──────────────────────────────────────────
     private Models.AuthResult? ParseAuthResponse(string responseText)
@@ -630,6 +701,26 @@ public class ApiService
         }
         
         return null;
+    }
+
+    // ──────────────────────────────────────────
+    // Objectives
+    // ──────────────────────────────────────────
+    public async Task<bool> ReplaceObjectivesAsync(string factionId, string orderId, List<MissionObjective> objectives)
+    {
+        try
+        {
+            var requests = objectives.Select(o => new { text = o.Text }).ToList();
+            var json = JsonSerializer.Serialize(requests);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync($"factions/{factionId}/orders/{orderId}/objectives", content);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[ControlPanel API] ReplaceObjectives error: {ex.Message}");
+            return false;
+        }
     }
 }
 

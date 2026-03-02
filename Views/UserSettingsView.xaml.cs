@@ -42,4 +42,12 @@ public partial class UserSettingsView : Page
     {
         _viewModel.GoToJoinOrCreate();
     }
+
+    private async void OnSaveDiscordServerId_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is Faction faction)
+        {
+            await _viewModel.SaveDiscordServerIdAsync(faction);
+        }
+    }
 }

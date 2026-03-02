@@ -17,6 +17,7 @@ public class FactionSelectViewModel : INotifyPropertyChanged
     private string _officerPassword = string.Empty;
     private string _viewPassword = string.Empty;
     private string _defaultRoleName = "Member";
+    private string _discordServerId = string.Empty;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler<Faction>? FactionJoined;
@@ -73,6 +74,12 @@ public class FactionSelectViewModel : INotifyPropertyChanged
     {
         get => _defaultRoleName;
         set { _defaultRoleName = value; OnPropertyChanged(); }
+    }
+
+    public string DiscordServerId
+    {
+        get => _discordServerId;
+        set { _discordServerId = value; OnPropertyChanged(); }
     }
 
     public FactionSelectViewModel(ApiService apiService)
@@ -158,7 +165,12 @@ public class FactionSelectViewModel : INotifyPropertyChanged
             new() { Name = string.IsNullOrWhiteSpace(DefaultRoleName) ? "Member" : DefaultRoleName, IsDefault = true }
         };
 
-        var faction = await _apiService.CreateFactionAsync(NewFactionName, OfficerPassword, ViewPassword, roles);
+        var faction = await _apiService.CreateFactionAsync(
+            NewFactionName,
+            OfficerPassword,
+            ViewPassword,
+            roles,
+            DiscordServerId);
 
         if (faction != null)
         {
@@ -181,6 +193,7 @@ public class FactionSelectViewModel : INotifyPropertyChanged
         OfficerPassword = string.Empty;
         ViewPassword = string.Empty;
         DefaultRoleName = "Member";
+        DiscordServerId = string.Empty;
         StatusMessage = string.Empty;
     }
 

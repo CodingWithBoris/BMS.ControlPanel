@@ -150,6 +150,7 @@ public partial class MainWindow : Window
         bool isOwner = _currentUser?.Id == _currentFaction.OwnerId;
         RolesTabBtn.Visibility = isOwner ? Visibility.Visible : Visibility.Collapsed;
         PersonnelTabBtn.Visibility = isOwner ? Visibility.Visible : Visibility.Collapsed;
+        VcRosterTabBtn.Visibility = Visibility.Visible;
         DeleteFactionBtn.Visibility = isOwner ? Visibility.Visible : Visibility.Collapsed;
 
         // Show Create Faction button only if user hasn't created one yet
@@ -168,6 +169,7 @@ public partial class MainWindow : Window
         OrdersTabBtn.IsEnabled = true;
         RolesTabBtn.IsEnabled = true;
         PersonnelTabBtn.IsEnabled = true;
+        VcRosterTabBtn.IsEnabled = true;
         SettingsTabBtn.IsEnabled = true;
         activeTab.IsEnabled = false;
     }
@@ -200,6 +202,15 @@ public partial class MainWindow : Window
         MainFrame.Navigate(personnelView);
     }
 
+    private void ShowVcRosterTab()
+    {
+        SetTabActive(VcRosterTabBtn);
+
+        var vcRosterViewModel = new VcRosterViewModel(_apiService);
+        var vcRosterView = new VcRosterView(vcRosterViewModel, _currentFaction!);
+        MainFrame.Navigate(vcRosterView);
+    }
+
     private void ShowSettingsTab()
     {
         SetTabActive(SettingsTabBtn);
@@ -225,6 +236,7 @@ public partial class MainWindow : Window
     private void OnOrdersTab_Click(object sender, RoutedEventArgs e) => ShowOrdersTab();
     private void OnRolesTab_Click(object sender, RoutedEventArgs e) => ShowRolesTab();
     private void OnPersonnelTab_Click(object sender, RoutedEventArgs e) => ShowPersonnelTab();
+    private void OnVcRosterTab_Click(object sender, RoutedEventArgs e) => ShowVcRosterTab();
     private void OnSettingsTab_Click(object sender, RoutedEventArgs e) => ShowSettingsTab();
 
     private record FactionPickerItem(Faction Faction, string DisplayTitle);
